@@ -40,13 +40,13 @@ def iou_score(bbox1, bbox2):
     y_int_2 = min(bbox1[1][1], bbox2[1][1])
 
     # Compute area of intersection
-    
+
     # Check if the bounding boxes are disjoint (no intersection)
     if x_int_2 - x_int_1 < 0 or y_int_2 - y_int_1 < 0:
         area_int = 0
     else:
         area_int = (x_int_2 - x_int_1 + 1) * (y_int_2 - y_int_1 + 1)
-    
+
     # Compute area of both bounding boxes
     area_bbox1 = (bbox1[1][0] - bbox1[0][0] + 1) * (bbox1[1][1] - bbox1[0][1] + 1)
     area_bbox2 = (bbox2[1][0] - bbox2[0][0] + 1) * (bbox2[1][1] - bbox2[0][1] + 1)
@@ -82,6 +82,7 @@ def test_algorithm(detection_func, csv_file_path, template_file_path, swap=False
     with open(csv_file_path) as csvDataFile:
         csvReader = csv.reader(csvDataFile)
         # Iterate through all test images
+        img_counter = 0
         for row in csvReader:
             # Find image path and ground truth bbox
             img_path = row[0]
@@ -93,11 +94,12 @@ def test_algorithm(detection_func, csv_file_path, template_file_path, swap=False
                 template = cv2.imread(img_path, 0)
                 img = cv2.imread(template_file_path)
             # Detection bbox
-            bbox_est = detection_func(img, template)
+            bbox_est = detection_func(img, template, img_counter, debug=True)
             score = iou_score(bbox_est, bbox_true)
-            
+
             # Add score to dict
             scores[img_path] = score
+            img_counter += 1
 
     # Return scores
     return scores
@@ -117,7 +119,7 @@ def test_all_algorithms(csv_file_path, template_file_path, output_file_path, swa
     for label in lookup_dict.keys():
         try:
             scores = test_algorithm(
-                lookup_dict[label], csv_file_path, 
+                lookup_dict[label], csv_file_path,
                 template_file_path, swap=swap)
             data = [[label, img, score] for img, score in scores.iteritems()]
         except:
@@ -125,8 +127,8 @@ def test_all_algorithms(csv_file_path, template_file_path, output_file_path, swa
 
         total_data += data
 
-    output_file = open(output_file_path, 'w')  
-    with output_file:  
+    output_file = open(output_file_path, 'w')
+    with output_file:
         writer = csv.writer(output_file)
         writer.writerows(total_data)
 
@@ -142,10 +144,10 @@ if __name__ == '__main__':
                 cone_template_path,cone_score_path)
         elif arg == "map":
             scores = test_all_algorithms(localization_csv_path,
-              localization_template_path, localization_score_path, swap=True)         
+              localization_template_path, localization_score_path, swap=True)
         elif arg == "citgo":
           scores = test_all_algorithms(citgo_csv_path,
-              citgo_template_path, citgo_score_path)         
+              citgo_template_path, citgo_score_path)
         else:
             print "Argument not recognized"
 

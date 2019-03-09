@@ -82,7 +82,7 @@ def test_algorithm(detection_func, csv_file_path, template_file_path, swap=False
     with open(csv_file_path) as csvDataFile:
         csvReader = csv.reader(csvDataFile)
         # Iterate through all test images
-        img_counter = 0
+        img_counter = 14
         for row in csvReader:
             # Find image path and ground truth bbox
             img_path = row[0]

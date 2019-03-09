@@ -36,9 +36,53 @@ def cd_color_segmentation(img, template):
 	"""
 	########## YOUR CODE STARTS HERE ##########
 
-	bounding_box = ((0,0),(0,0))
+	hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
+	lower_bounds, upper_bounds = max_min_hsv(hsv_template)
+
+	img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+	# upper_bounds = np.array([17,99,62]) # HSV values we are interested in
+	# lower_bounds = np.array([50,97,100])
+	mask = cv2.inRange(img_hsv, lower_bounds, upper_bounds)
+
+	kernel = np.ones((5,5), np.uint8)
+	eroded = cv2.erode(mask, kernel, iterations=5)
+	dilated = cv2.dilate(eroded, kernel, iterations=5)
+	im, contours, h = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	cv2.imshow('j', dilated)
+	cv2.waitKey(0)
+	if len(contours)>1:
+		print("There is more than one orange object.")
+		return None
+	elif len(contours)<1:
+		print("No orange object detected.")
+		return None
+	else:
+		x,y,w,h = cv2.boundingRectangle(contours[0])
+		bounding_box = ((x,y), (x+width, y+height))
 
 	########### YOUR CODE ENDS HERE ###########
 
 	# Return bounding box
 	return bounding_box
+
+def max_min_hsv(temp): # TODOOOOOOOOOOOOOOOO
+	print(temp[0][0])
+	low = [180,255,255]
+	high = [0,0,0]
+	for i in temp:
+		for p in i:
+			if not (p[0] == 0 and p[1] == 0 and p[2]==255):
+				low[0] = min(low[0], p[0])
+				low[1] = min(low[0], p[0])
+				low[2] = min(low[0], p[0])
+				high[0] = max(high[0], p[0])
+				high[1] = max(high[1], p[1])
+				high[2] = max(high[2], p[2])
+	return (np.array(low),np.array(high))
+
+
+if __name__ == "__main__":
+	img = cv2.imread("test15.jpg")
+	template = cv2.imread("cone_template.png")
+	image_print(img)
+	cd_color_segmentation(img, template)

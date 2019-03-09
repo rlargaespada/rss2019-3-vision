@@ -1,7 +1,7 @@
 """
 RSS 2019 | Bounding box methods using SIFT and Template Matching
 
-Authors: Abbie Lee, Alex Cuellar
+Author: Abbie Lee
 """
 
 import cv2
@@ -35,7 +35,9 @@ def image_print(img):
 
 def cd_sift_ransac(img, template, img_counter, debug = False):
     """
-    Implement the cone detection using SIFT + RANSAC algorithm
+    Implement the cone detection using SIFT + RANSAC algorithm using tutorial
+    at:  https://stackoverflow.com/questions/51606215/how-to-draw-bounding-box-on-best-matches
+
     Input:
     img: np.3darray; the input image with a cone to be detected
     Return:
@@ -83,28 +85,31 @@ def cd_sift_ransac(img, template, img_counter, debug = False):
         x_max = dst[2][0][0]
         y_max = dst[2][0][1]
 
+        bounding_box = ((x_min, y_min), (x_max, y_max))
+
         # Add offset to box for drawing
         dst += (w, 0)
 
         if debug:
-            draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-                   singlePointColor = None,
-                   matchesMask = matchesMask, # draw only inliers
-                   flags = 2)
-
-            img3 = cv2.drawMatches(template, kp1, img, kp2, good, None,**draw_params)
-
-            # Draw bounding box in Red
-            img3 = cv2.polylines(img3, [np.int32(dst)], True, (0,0,255), 3, cv2.LINE_AA)
-
-            fname = str(img_counter) + ".png"
-
-            cv2.imwrite("test_results/" + fname, img3)
-            # cv2.imshow("result", img3)
-            # cv2.waitKey(0)
+            debug_bb(img, template, bounding_box, img_counter)
+            # draw_params = dict(matchColor = (0,255,0), # draw matches in green color
+            #        singlePointColor = None,
+            #        matchesMask = matchesMask, # draw only inliers
+            #        flags = 2)
+            #
+            # visualize = cv2.drawMatches(template, kp1, img, kp2, good, None,**draw_params)
+            #
+            # # Draw bounding box in Red
+            # visualize = cv2.polylines(visualize, [np.int32(dst)], True, (0,0,255), 3, cv2.LINE_AA)
+            #
+            # fname = str(img_counter) + ".png"
+            #
+            # cv2.imwrite("test_results/" + fname, visualize)
+            # # cv2.imshow("result", img3)
+            # # cv2.waitKey(0)
 
         # Return bounding box
-        return ((x_min, y_min), (x_max, y_max))
+        return bounding_box
 
     else:
         print("[SIFT] not enough matches; matches: ", len(good))
@@ -112,9 +117,11 @@ def cd_sift_ransac(img, template, img_counter, debug = False):
         # Return bounding box of area 0 if no match found
         return ((0,0), (0,0))
 
-def cd_template_matching(img, template):
+def cd_template_matching(img, template, img_counter, debug=False):
     """
-    Implement the cone detection using template matching algorithm
+    Implement the cone detection using template matching algorithm using tutorial
+    at: https://www.pyimagesearch.com/2015/01/26/multi-scale-template-matching-using-python-opencv/
+
     Input:
     img: np.3darray; the input image with a cone to be detected
     Return:
@@ -134,21 +141,74 @@ def cd_template_matching(img, template):
     best_match = None
 
     # Loop over different scales of image template
-    for scale in np.linspace(1.5, .5, 50):
+    for scale in np.linspace(0.5, 1.5, 50):
         # Resize the image
         resized_template = imutils.resize(template_canny, width = int(template_canny.shape[1] * scale))
-        (h,w) = resized_template.shape[:2]
+        (h, w) = resized_template.shape[:2]
 
         # Check to see if test image is now smaller than template image
         if resized_template.shape[0] > img_height or resized_template.shape[1] > img_width:
             continue
 
-            ########## YOUR CODE STARTS HERE ##########
-            # Use OpenCV template matching functions to find the best match
-            # across template scales.
-            # Remember to resize the bounding box using the highest scoring scale
-            # x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
-            bounding_box = ((0,0),(0,0))
-            ########### YOUR CODE ENDS HERE ###########
+        ########## YOUR CODE STARTS HERE ##########
+        # Use OpenCV template matching functions to find the best match
+        # across template scales.
+        # Remember to resize the bounding box using the highest scoring scale
+        # x1,y1 pixel will be accurate, but x2,y2 needs to be correctly scaled
 
-            return bounding_box
+        # detect edges in the resized, grayscale image and apply template
+        # matching to find the template in the image
+        result = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCORR)
+        minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(result)
+
+        # if we have found a new maximum correlation value, then update
+        # the bookkeeping variable
+        if best_match is None or maxVal > best_match[0]:
+        	best_match = (maxVal, maxLoc, scale, (h, w))
+
+    # unpack the bookkeeping variable and compute the (x, y) coordinates
+    # of the bounding box based on the resized ratio
+    (_, maxLoc, scale, (h, w)) = best_match
+
+    # set bounding box params
+    x_min = int(maxLoc[0])
+    y_min = int(maxLoc[1])
+    x_max = int((maxLoc[0] + h) * scale)
+    y_max = int((maxLoc[1] + w) * scale)
+
+    bounding_box = ((x_min, y_min), (x_max, y_max))
+
+    # draw a bounding box around the detected region
+    if debug:
+        debug_bb(img, template, bounding_box, img_counter)
+
+        ########### YOUR CODE ENDS HERE ###########
+
+    return bounding_box
+
+def debug_bb(img, template, bounding_box, img_counter):
+    """
+    Display image with detected bounding box and template.
+
+    Input:
+        img: np.3darray; the input image with a cone to be detected
+        template: np.3darray: template against which we are matching
+    Return: None
+    """
+    matches = []
+    db_img = cv2.drawMatches(template, None, img, None, None, None, None)
+
+    # shift bb to draw on image
+    w = template.shape[1]
+
+    top_left =(int(bounding_box[0][0] + w), bounding_box[0][1])
+    bottom_right = (int(bounding_box[1][0]) + w, bounding_box[1][1])
+
+    # Draw bounding box in Red
+    cv2.rectangle(db_img, top_left, bottom_right, (0, 0, 255), 2)
+
+    fname = str(img_counter) + ".png"
+
+    cv2.imwrite("test_results/" + fname, db_img)
+    # cv2.imshow("Debug", db_img)
+    # cv2.waitKey(0)

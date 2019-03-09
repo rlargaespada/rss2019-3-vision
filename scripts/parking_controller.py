@@ -18,6 +18,8 @@ class ParkingController():
         self.error_pub = rospy.Publisher("/parking_error",
             parking_error, queue_size=10)
 
+        self.parking_distance = 2
+
         self.relative_x = 0
         self.relative_y = 0
 
@@ -28,12 +30,34 @@ class ParkingController():
         
         #################################
         # Play with this number too
-        parking_distance = .75 #meters
+        # parking_distance = .75 #meters
         
         # Your Code Here.
         # Use relative position and your control law to populate
         # drive_cmd.
+
+        # using Ackerman Steering x pure pursuit to find angle
         
+        dist_to_pt = np.sqrt(self.relative_x**2 + self.relative_y**2)
+        dist_to_park = dist_to_pt-self.parking_distance
+
+        L_1 = dist_to_park # look ahead distance
+        L = 0.325 # size of wheel base
+        theta = np.arctan(self.relative_y/self.relative_x) 
+
+        delta = np.arctan(2*L*np.sin(theta)/L_1)
+
+        drive_cmd.drive.steering_angle = delta 
+
+        # using proportional (potentially PD or PID) controller to control velocity
+        kp = 2
+        vel = kp*dist_to_park
+        print(vel)
+        vel = max(min(1.0, vel), -1.0) # caps velocity magnitude at 1
+        print(vel)
+
+        drive_cmd.drive.speed = vel
+
         #################################
         self.drive_pub.publish(drive_cmd)
         self.error_publisher()
@@ -46,7 +70,11 @@ class ParkingController():
         error_msg = parking_error()
         
         #################################
-        
+
+        error_msg.x_error = self.relative_x
+        error_msg.y_error = self.relative_y
+        error_msg.distance_error = np.sqrt(self.relative_x**2 + self.relative_y**2)
+
         # Your Code Here
         # Populate error_msg with relative_x, relative_y, sqrt(x^2+y^2)
 

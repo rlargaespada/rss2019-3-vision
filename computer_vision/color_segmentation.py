@@ -36,19 +36,19 @@ def cd_color_segmentation(img, template):
 	"""
 	########## YOUR CODE STARTS HERE ##########
 
-	hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
-	lower_bounds, upper_bounds = max_min_hsv(hsv_template)
+	# hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
+	# lower_bounds, upper_bounds = max_min_hsv(hsv_template)
 
 	img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	# upper_bounds = np.array([17,99,62]) # HSV values we are interested in
-	# lower_bounds = np.array([50,97,100])
+	upper_bounds = np.array([15,255,255]) # HSV values we are interested in
+	lower_bounds = np.array([7,50,100])
 	mask = cv2.inRange(img_hsv, lower_bounds, upper_bounds)
 
 	kernel = np.ones((5,5), np.uint8)
-	eroded = cv2.erode(mask, kernel, iterations=5)
-	dilated = cv2.dilate(eroded, kernel, iterations=5)
+	eroded = cv2.erode(mask, kernel, iterations=2)
+	dilated = cv2.dilate(eroded, kernel, iterations=2)
 	im, contours, h = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
-	cv2.imshow('j', dilated)
+	cv2.imshow('mask', dilated)
 	cv2.waitKey(0)
 	if len(contours)>1:
 		print("There is more than one orange object.")
@@ -57,8 +57,12 @@ def cd_color_segmentation(img, template):
 		print("No orange object detected.")
 		return None
 	else:
-		x,y,w,h = cv2.boundingRectangle(contours[0])
-		bounding_box = ((x,y), (x+width, y+height))
+		x,y,w,h = cv2.boundingRect(contours[0])
+		bounding_box = ((x,y), (x+w, y+h))
+		cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2) # draws bounding rectangle around cone in OG pic
+		cv2.imshow("image", img)
+		cv2.waitKey(0)
+
 
 	########### YOUR CODE ENDS HERE ###########
 

@@ -7,6 +7,7 @@ Author: Abbie Lee
 import cv2
 import imutils
 import numpy as np
+from matplotlib import pyplot as plt
 import pdb
 
 #################### X-Y CONVENTIONS #########################
@@ -158,12 +159,13 @@ def cd_template_matching(img, template, img_counter, debug=False):
 
         # detect edges in the resized, grayscale image and apply template
         # matching to find the template in the image
-        result = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCORR)
+        # image_print(resized_template)
+        result = cv2.matchTemplate(img_canny, resized_template, cv2.TM_CCOEFF_NORMED)
         minVal, maxVal, minLoc, maxLoc = cv2.minMaxLoc(result)
-
         # if we have found a new maximum correlation value, then update
         # the bookkeeping variable
         if best_match is None or maxVal > best_match[0]:
+            	# result_final = result
         	best_match = (maxVal, maxLoc, scale, (h, w))
 
     # unpack the bookkeeping variable and compute the (x, y) coordinates
@@ -173,11 +175,11 @@ def cd_template_matching(img, template, img_counter, debug=False):
     # set bounding box params
     x_min = int(maxLoc[0])
     y_min = int(maxLoc[1])
-    x_max = int((maxLoc[0] + h) * scale)
-    y_max = int((maxLoc[1] + w) * scale)
+    x_max = int(maxLoc[0] + w)
+    y_max = int(maxLoc[1] + h)
 
     bounding_box = ((x_min, y_min), (x_max, y_max))
-
+    # image_print(result_final)
     # draw a bounding box around the detected region
     if debug:
         debug_bb(img, template, bounding_box, img_counter)

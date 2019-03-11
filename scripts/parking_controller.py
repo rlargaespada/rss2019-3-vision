@@ -26,6 +26,7 @@ class ParkingController():
     def relative_cone_callback(self, msg):
         self.relative_x = msg.x_pos
         self.relative_y = msg.y_pos
+        print(self.relative_x, self.relative_y)
         drive_cmd = AckermannDriveStamped()
         
         #################################
@@ -37,7 +38,8 @@ class ParkingController():
         # drive_cmd.
 
         # using Ackerman Steering x pure pursuit to find angle
-        if self.relative_y = -1:   #Changed to whatever we decide failure to be
+
+        if self.relative_y == -1:   #Changed to whatever we decide failure to be
             if self.failure_forward < 10:
                 self.drive_cmd.drive.steering_angle = 0
                 self.failure_forward += 1
@@ -47,11 +49,16 @@ class ParkingController():
         else:
             self.failure_forward = 0
             dist_to_pt = np.sqrt(self.relative_x**2 + self.relative_y**2)
-            dist_to_park = dist_to_pt-self.parking_distance
+            if self.relative_x<0:
+                dist_to_park = -dist_to_pt+self.parking_distance
+                theta = -np.arctan(self.relative_y/self.relative_x)  
+            else:
+                dist_to_park = dist_to_pt-self.parking_distance
+                theta = np.arctan(self.relative_y/self.relative_x) 
 
             L_1 = dist_to_park # look ahead distance
             L = 0.325 # size of wheel base
-            theta = np.arctan(self.relative_y/self.relative_x) 
+            
 
             delta = np.arctan(2*L*np.sin(theta)/L_1)
 

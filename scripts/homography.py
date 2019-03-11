@@ -11,15 +11,22 @@ from visualization_msgs.msg import Marker
 
 class homography():
     def __init__(self):
-        self.src_pts = np.array([[],[],[],[]], dtype=np.float32) #image
-        self.dest_pts = np.array([[],[],[],[]], dtype=np.float32) #ground
+        self.src_pts = [[693, 495],[1137, 496],[228, 492],[259, 376], [528, 377], [795, 382], [1054, 386], [939, 350],
+                                [655, 356], [361, 354]] #image
+        self.dest_pts = [[2,0],[2,1.5],[2, -1.5],[5, -3], [5,-1], [5,1], [5,3], [7, 3], [7,0], [7,-3]] #ground
         self.matrix = self.create_matrix()
         #self.marker_pub = rospy.Publisher("/homography_test_marker", Marker, queue_size=1)
         #self.rate = rospy.Rate(2)
 
 
     def create_matrix(self):
-        H = cv2.findHomography(self.src_pts, self.dest_pts)
+        src = np.array(self.src_pts, dtype=numpy.float32)
+        dest_cnv = self.dest_pts
+        for i in range(len(dest_cnv)):
+            dest_cnv[i] = dest_cnv[i]/3.281
+        dest = np.array(self.dest_pts, dtype=numpy.float32)
+            
+        H = cv2.findHomography(src, dest)
         return H
 
     def test_matrix(self, test_point):

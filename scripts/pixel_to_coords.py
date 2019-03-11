@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 import rospy
 from lab4.msg import cone_location
-#from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image
 import numpy as np
-#import cv2
+import cv2
 from std_msgs.msg import Int32MultiArray
-#from cv_bridge import CvBridge
+from cv_bridge import CvBridge
 from rospy.numpy_msg import numpy_msg
 
 class homopgraphy_transform():
     def __init__(self):
-        rospy.Subscriber("/relative_cone", Int32MultiArray, self.callback) #fix, want input pixel coordinates as a list
+        rospy.Subscriber("/zed/rgb/image_rect_color", Image, self.callback) #image from camera
+        self.bridge = CvBridge()
         self.pub = rospy.Publisher("/relative_cone", cone_location, queue_size=10) #fix publish topic
         self.rate = rospy.Rate(10)
         self.matrix = np.array([[-5.86065426e-05,  7.20049423e-04, -7.91927511e-01], 
@@ -19,7 +20,11 @@ class homopgraphy_transform():
                                 dtype=np.float32)
 
     def callback(self, data):
-        pixels = np.array([data[0], data[1], 1])
+        #get image into CV readable format
+        cv_image = self.bridge.imgmsg_to_cv2(data)
+        #color segmentation code
+        #code to return a pixel or a group of pixels
+            #output: pixels = np.array(u, v, 1])
         coords = self.matrix.dot(pixels)
         for i in range(len(coords)):
             coords[i] = coords[i]/coords[-1]

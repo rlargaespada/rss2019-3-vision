@@ -40,28 +40,48 @@ def cd_color_segmentation(img, template):
 	# lower_bounds, upper_bounds = max_min_hsv(hsv_template)
 
 	img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
-	upper_bounds = np.array([15,255,255]) # HSV values we are interested in
-	lower_bounds = np.array([7,50,100])
-	mask = cv2.inRange(img_hsv, lower_bounds, upper_bounds)
+	upper_bounds = [30,255,255] # HSV values we are interested in
+	lower_bounds = [8,175,175]
+	mask = cv2.inRange(img_hsv, np.array(lower_bounds), np.array(upper_bounds))
 
 	kernel = np.ones((5,5), np.uint8)
 	eroded = cv2.erode(mask, kernel, iterations=2)
-	dilated = cv2.dilate(eroded, kernel, iterations=2)
-	im, contours, h = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	dilated = cv2.dilate(eroded, kernel, iterations=3)
+	im, contours, h = cv2.findContours(dilated, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
 	cv2.imshow('mask', dilated)
 	cv2.waitKey(0)
+
+	# while len(contours)==0:
+	# 	upper_bounds[0]=upper_bounds[0]+2
+	# 	mask = cv2.inRange(img_hsv, np.array(lower_bounds), np.array(upper_bounds))
+	# 	kernel = np.ones((5,5), np.uint8)
+	# 	eroded = cv2.erode(mask, kernel, iterations=3)
+	# 	dilated = cv2.dilate(eroded, kernel, iterations=3)
+	# 	im, contours, h = cv2.findContours(dilated, cv2.RETR_TREE, cv2.CHAIN_APPROX_SIMPLE)
+	# 	cv2.imshow('mask', dilated)
+	# 	cv2.waitKey(0)
+
 	if len(contours)>1:
 		print("There is more than one orange object.")
-		return None
-	elif len(contours)<1:
-		print("No orange object detected.")
-		return None
-	else:
-		x,y,w,h = cv2.boundingRect(contours[0])
-		bounding_box = ((x,y), (x+w, y+h))
-		cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2) # draws bounding rectangle around cone in OG pic
 		cv2.imshow("image", img)
 		cv2.waitKey(0)
+		areas = [cv2.contourArea(c) for c in contours]
+		i = areas.index(max(areas))
+		c = contours[i]
+	elif len(contours)<1:
+		print("No orange object detected.")
+		cv2.imshow("image", img)
+		cv2.waitKey(0)
+		return ((0,0), (0, 0))
+		return None
+	else:
+		c = contours[0]
+
+	x,y,w,h = cv2.boundingRect(c)
+	bounding_box = ((x,y), (x+w, y+h))
+	cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2) # draws bounding rectangle around cone in OG pic
+	cv2.imshow("image", img)
+	cv2.waitKey(0)
 
 
 	########### YOUR CODE ENDS HERE ###########

@@ -13,9 +13,9 @@ class homopgraphy_transform():
         rospy.Subscriber("/relative_cone", Int32MultiArray, self.callback) #fix, want input pixel coordinates as a list
         self.pub = rospy.Publisher("/relative_cone", cone_location, queue_size=10) #fix publish topic
         self.rate = rospy.Rate(10)
-        self.matrix = np.array([[1.23439833e-05,  3.26294215e-04, -5.74007407e-01], #these numbers arent greate, need to fix
-                                [-6.19388166e-04,  1.20862702e-04,  3.53063720e-01],
-                                [ 2.04221042e-05, -3.24199685e-03,  1.00000000e+00]], 
+        self.matrix = np.array([[-5.86065426e-05,  7.20049423e-04, -7.91927511e-01], 
+                                [-8.32948552e-04,  1.29477073e-04,  4.92479502e-01],
+                                [-2.65306532e-05, -3.54739645e-03,  1.00000000e+00]], 
                                 dtype=np.float32)
 
     def callback(self, data):

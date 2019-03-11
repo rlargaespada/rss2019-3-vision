@@ -26,7 +26,7 @@ class get_waypoint():
         #color segmentation code
         bounding_box =cs.cd_color_segmentation(cv_image)
         #code to return a pixel or a group of pixels
-        pixels = cs.get_midpoint(bounding_box)
+        pixels = self.get_midpoint(bounding_box)
         coords = self.matrix.dot(pixels)
         for i in range(len(coords)):
             coords[i] = coords[i]/coords[-1]
@@ -34,6 +34,13 @@ class get_waypoint():
         cone_loc.x_pos = coords[0]
         cone_loc.y_pos = coords[1]
         self.pub.publish(cone_loc)
+
+    def get_midpoint(self, bounding_box):
+        top_left = bounding_box[0]
+        bot_right = bounding_box[1]
+        y = bot_right[1]
+        x = top_left[0] + 1.0/2.0*(bot_right[0]-top_left[0])
+        return np.array([x,y,1])
 
 if __name__ == "__main__":
     rospy.init_node("get_waypoint")

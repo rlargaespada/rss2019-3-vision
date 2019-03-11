@@ -2,12 +2,13 @@ import cv2
 import imutils
 import numpy as np
 import pdb
+from debug_utils import *
 
 #################### X-Y CONVENTIONS #########################
 # 0,0  X  > > > > >
 #
 #  Y
-# 
+#
 #  v  This is the image. Y increases downwards, X increases rightwards
 #  v  Please return bounding boxes as ((xmin, ymin), (xmax, ymax))
 #  v
@@ -24,7 +25,7 @@ def image_print(img):
 	cv2.waitKey(0)
 	cv2.destroyAllWindows()
 
-def cd_color_segmentation(img, template):
+def cd_color_segmentation(img, template, img_path, debug = False):
 	"""
 	Implement the cone detection using color segmentation algorithm
 	Input:
@@ -48,8 +49,8 @@ def cd_color_segmentation(img, template):
 	eroded = cv2.erode(mask, kernel, iterations=2)
 	dilated = cv2.dilate(eroded, kernel, iterations=3)
 	im, contours, h = cv2.findContours(dilated, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-	cv2.imshow('mask', dilated)
-	cv2.waitKey(0)
+	# cv2.imshow('mask', dilated)
+	# cv2.waitKey(0)
 
 	# while len(contours)==0:
 	# 	upper_bounds[0]=upper_bounds[0]+2
@@ -63,18 +64,16 @@ def cd_color_segmentation(img, template):
 
 	if len(contours)>1:
 		print("There is more than one orange object.")
-		cv2.imshow("image", img)
-		cv2.waitKey(0)
+		# cv2.imshow("image", img)
+		# cv2.waitKey(0)
 		areas = [cv2.contourArea(c) for c in contours]
 		i = areas.index(max(areas))
 		c = contours[i]
 
-		return ((0,0), (0, 0)) ## add finding which one is the max area contour
-		return None
 	elif len(contours)<1:
 		print("No orange object detected.")
-		cv2.imshow("image", img)
-		cv2.waitKey(0)
+		# cv2.imshow("image", img)
+		# cv2.waitKey(0)
 		return ((0,0), (0, 0))
 		return None
 	else:
@@ -83,8 +82,11 @@ def cd_color_segmentation(img, template):
 	x,y,w,h = cv2.boundingRect(c)
 	bounding_box = ((x,y), (x+w, y+h))
 	cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2) # draws bounding rectangle around cone in OG pic
-	cv2.imshow("image", img)
-	cv2.waitKey(0)
+
+	draw_bb(img, mask, bounding_box, img_path, show = False, save = True)
+
+	# cv2.imshow("image", img)
+	# cv2.waitKey(0)
 
 
 	########### YOUR CODE ENDS HERE ###########
@@ -111,5 +113,5 @@ def max_min_hsv(temp): # TODOOOOOOOOOOOOOOOO
 if __name__ == "__main__":
 	img = cv2.imread("test15.jpg")
 	template = cv2.imread("cone_template.png")
-	image_print(img)
+	# image_print(img)
 	cd_color_segmentation(img, template)

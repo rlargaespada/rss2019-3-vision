@@ -109,6 +109,12 @@ def max_min_hsv(temp): # TODOOOOOOOOOOOOOOOO
 				high[2] = max(high[2], p[2])
 	return (np.array(low),np.array(high))
 
+def get_midpoint(bounding_box):
+	top_left = bounding_box[0]
+	bot_right = bounding_box[1]
+	y = bot_right[1]
+	x = top_left[0] + 1.0/2.0*(bot_right[0]-top_left[0])
+	return np.array([x,y,1])
 
 if __name__ == "__main__":
 	img = cv2.imread("test15.jpg")

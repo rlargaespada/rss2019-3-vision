@@ -7,8 +7,9 @@ import cv2
 from std_msgs.msg import Int32MultiArray
 from cv_bridge import CvBridge
 from rospy.numpy_msg import numpy_msg
+import color_segmentation as cs
 
-class homopgraphy_transform():
+class get_waypoint():
     def __init__(self):
         rospy.Subscriber("/zed/rgb/image_rect_color", Image, self.callback) #image from camera
         self.bridge = CvBridge()
@@ -23,8 +24,9 @@ class homopgraphy_transform():
         #get image into CV readable format
         cv_image = self.bridge.imgmsg_to_cv2(data)
         #color segmentation code
+        bounding_box =cs.cd_color_segmentation(cv_image)
         #code to return a pixel or a group of pixels
-            #output: pixels = np.array(u, v, 1])
+        pixels = cs.get_midpoint(bounding_box)
         coords = self.matrix.dot(pixels)
         for i in range(len(coords)):
             coords[i] = coords[i]/coords[-1]
@@ -34,6 +36,6 @@ class homopgraphy_transform():
         self.pub.publish(cone_loc)
 
 if __name__ == "__main__":
-    rospy.init_node("homography_transform")
-    homopgraphy_transform()
+    rospy.init_node("get_waypoint")
+    get_waypoint()
     rospy.spin()

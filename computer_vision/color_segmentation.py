@@ -68,6 +68,9 @@ def cd_color_segmentation(img, template):
 		areas = [cv2.contourArea(c) for c in contours]
 		i = areas.index(max(areas))
 		c = contours[i]
+
+		return ((0,0), (0, 0)) ## add finding which one is the max area contour
+		return None
 	elif len(contours)<1:
 		print("No orange object detected.")
 		cv2.imshow("image", img)

@@ -94,7 +94,7 @@ def test_algorithm(detection_func, csv_file_path, template_file_path, swap=False
                 template = cv2.imread(img_path, 0)
                 img = cv2.imread(template_file_path)
             # Detection bbox
-            bbox_est = detection_func(img, template)
+            bbox_est = detection_func(img, template, img_path, debug=True)
             score = iou_score(bbox_est, bbox_true)
 
             # Add score to dict

@@ -1,5 +1,6 @@
 """
-RSS 2019 | Bounding box methods using SIFT and Template Matching
+RSS 2019 | sift_template.py
+Bounding box methods using SIFT and Template Matching
 
 Author: Abbie Lee
 """
@@ -9,6 +10,8 @@ import imutils
 import numpy as np
 from matplotlib import pyplot as plt
 import pdb
+
+from debug_utils import *
 
 #################### X-Y CONVENTIONS #########################
 # 0,0  X  > > > > >
@@ -34,7 +37,7 @@ def image_print(img):
     cv2.waitKey()
     cv2.destroyAllWindows()
 
-def cd_sift_ransac(img, template, img_counter, debug = False):
+def cd_sift_ransac(img, template, img_path, debug = False):
     """
     Implement the cone detection using SIFT + RANSAC algorithm using tutorial
     at:  https://stackoverflow.com/questions/51606215/how-to-draw-bounding-box-on-best-matches
@@ -69,6 +72,8 @@ def cd_sift_ransac(img, template, img_counter, debug = False):
     if len(good) > MIN_MATCH:
         src_pts = np.float32([ kp1[m.queryIdx].pt for m in good ]).reshape(-1,1,2)
         dst_pts = np.float32([ kp2[m.trainIdx].pt for m in good ]).reshape(-1,1,2)
+        
+        kp2_matched=([ kp2[m.trainIdx] for m in good ])
 
         # Create mask
         M, mask = cv2.findHomography(src_pts, dst_pts, cv2.RANSAC, 5.0)
@@ -92,22 +97,9 @@ def cd_sift_ransac(img, template, img_counter, debug = False):
         dst += (w, 0)
 
         if debug:
-            debug_bb(img, template, bounding_box, img_counter)
-            # draw_params = dict(matchColor = (0,255,0), # draw matches in green color
-            #        singlePointColor = None,
-            #        matchesMask = matchesMask, # draw only inliers
-            #        flags = 2)
-            #
-            # visualize = cv2.drawMatches(template, kp1, img, kp2, good, None,**draw_params)
-            #
-            # # Draw bounding box in Red
-            # visualize = cv2.polylines(visualize, [np.int32(dst)], True, (0,0,255), 3, cv2.LINE_AA)
-            #
-            # fname = str(img_counter) + ".png"
-            #
-            # cv2.imwrite("test_results/" + fname, visualize)
-            # # cv2.imshow("result", img3)
-            # # cv2.waitKey(0)
+            draw_bb(img, template, bounding_box, img_path, show = False, save = False)
+            match_kp(img, template, kp2, kp1, bounding_box, good, matchesMask, img_path, show = False, save = False)
+            draw_kp(img, kp2_matched, img_path, show = False, save = True)
 
         # Return bounding box
         return bounding_box
@@ -118,7 +110,7 @@ def cd_sift_ransac(img, template, img_counter, debug = False):
         # Return bounding box of area 0 if no match found
         return ((0,0), (0,0))
 
-def cd_template_matching(img, template, img_counter, debug=False):
+def cd_template_matching(img, template, img_path, debug=False):
     """
     Implement the cone detection using template matching algorithm using tutorial
     at: https://www.pyimagesearch.com/2015/01/26/multi-scale-template-matching-using-python-opencv/
@@ -182,35 +174,8 @@ def cd_template_matching(img, template, img_counter, debug=False):
     # image_print(result_final)
     # draw a bounding box around the detected region
     if debug:
-        debug_bb(img, template, bounding_box, img_counter)
+        draw_bb(img, template, bounding_box, img_path, show = False)
 
         ########### YOUR CODE ENDS HERE ###########
 
     return bounding_box
-
-def debug_bb(img, template, bounding_box, img_counter):
-    """
-    Display image with detected bounding box and template.
-
-    Input:
-        img: np.3darray; the input image with a cone to be detected
-        template: np.3darray: template against which we are matching
-    Return: None
-    """
-    matches = []
-    db_img = cv2.drawMatches(template, None, img, None, None, None, None)
-
-    # shift bb to draw on image
-    w = template.shape[1]
-
-    top_left =(int(bounding_box[0][0] + w), bounding_box[0][1])
-    bottom_right = (int(bounding_box[1][0]) + w, bounding_box[1][1])
-
-    # Draw bounding box in Red
-    cv2.rectangle(db_img, top_left, bottom_right, (0, 0, 255), 2)
-
-    fname = str(img_counter) + ".png"
-
-    cv2.imwrite("test_results/" + fname, db_img)
-    # cv2.imshow("Debug", db_img)
-    # cv2.waitKey(0)

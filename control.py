@@ -7,6 +7,6 @@ def c(p):
 	'''
 	L = .324 #length of wheelbase [m]
 	l = np.sqrt(np.sum(p[0]**2+p[1]**2)) #lookahead distance [m]
-	a = np.atan(p[0]/p[1]) #angle of curvature [rad]
-	u = np.atan(2*L*sin(a)/l) #control action [rad]
+	a = np.arctan(p[0]/p[1]) #angle of curvature [rad]
+	u = np.arctan(2*L*np.sin(a)/l) #control action [rad]
 	return u

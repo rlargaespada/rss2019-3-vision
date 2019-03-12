@@ -11,6 +11,7 @@ import color_segmentation as cs
 
 class get_waypoint():
     def __init__(self):
+	rospy.loginfo("here first")
         rospy.Subscriber("/zed/rgb/image_rect_color", Image, self.callback) #image from camera
         self.bridge = CvBridge()
         self.pub = rospy.Publisher("/relative_cone", cone_location, queue_size=10) #fix publish topic
@@ -27,6 +28,7 @@ class get_waypoint():
         bounding_box =cs.cd_color_segmentation(cv_image)
         #code to return a pixel or a group of pixels
         pixels = self.get_midpoint(bounding_box)
+	#rospy.loginfo(pixels)
         coords = self.matrix.dot(pixels)
         for i in range(len(coords)):
             coords[i] = coords[i]/coords[-1]

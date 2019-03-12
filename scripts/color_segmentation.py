@@ -2,7 +2,7 @@ import cv2
 import imutils
 import numpy as np
 import pdb
-from debug_utils import *
+#from debug_utils import *
 
 #################### X-Y CONVENTIONS #########################
 # 0,0  X  > > > > >
@@ -39,17 +39,17 @@ def cd_color_segmentation(img, template=None, img_path=None, debug = False):
 
 	# hsv_template = cv2.cvtColor(template, cv2.COLOR_BGR2HSV)
 	# lower_bounds, upper_bounds = max_min_hsv(hsv_template)
-
+	print("image:", img.shape)
 	img_hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
 	upper_bounds = [30,255,255] # HSV values we are interested in
-	lower_bounds = [8,175,175]
+	lower_bounds = [8,125,125]
 	mask = cv2.inRange(img_hsv, np.array(lower_bounds), np.array(upper_bounds))
-
+	#cv2.imwrite("real_image_1.png",mask)
 	kernel = np.ones((5,5), np.uint8)
 	eroded = cv2.erode(mask, kernel, iterations=2)
 	dilated = cv2.dilate(eroded, kernel, iterations=3)
 	im, contours, h = cv2.findContours(dilated, cv2.RETR_LIST, cv2.CHAIN_APPROX_SIMPLE)
-	# cv2.imshow('mask', dilated)
+	#image_print(dilated)
 	# cv2.waitKey(0)
 
 	# while len(contours)==0:
@@ -78,12 +78,13 @@ def cd_color_segmentation(img, template=None, img_path=None, debug = False):
 		return None
 	else:
 		c = contours[0]
-
+	print(len(contours[0]))
 	x,y,w,h = cv2.boundingRect(c)
 	bounding_box = ((x,y), (x+w, y+h))
+	print(bounding_box)
 	cv2.rectangle(img,(x,y),(x+w,y+h),(0,255,0),2) # draws bounding rectangle around cone in OG pic
 
-	draw_bb(img, mask, bounding_box, img_path, show = False, save = True)
+	# draw_bb(img, mask, bounding_box, img_path, show = False, save = True)
 
 	# cv2.imshow("image", img)
 	# cv2.waitKey(0)

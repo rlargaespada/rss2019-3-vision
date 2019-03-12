@@ -13,19 +13,19 @@ class ParkingController():
     def __init__(self):
         rospy.Subscriber("/relative_cone", cone_location, 
             self.relative_cone_callback)    
-        self.drive_pub = rospy.Publisher("/drive", 
+        self.drive_pub = rospy.Publisher("/vesc/ackermann_cmd_mux/input/navigation", 
             AckermannDriveStamped, queue_size=10)
         self.error_pub = rospy.Publisher("/parking_error",
             parking_error, queue_size=10)
 
-        self.parking_distance = 2
+        self.parking_distance = 0.7
         self.failure_forward = 0
         self.relative_x = 0
         self.relative_y = 0
 
     def relative_cone_callback(self, msg):
         self.relative_x = msg.x_pos
-        self.relative_y = msg.y_pos
+        self.relative_y = - msg.y_pos
         print(self.relative_x, self.relative_y)
         drive_cmd = AckermannDriveStamped()
         
@@ -38,7 +38,7 @@ class ParkingController():
         # drive_cmd.
 
         # using Ackerman Steering x pure pursuit to find angle
-
+	
         if self.relative_y == -1:   #Changed to whatever we decide failure to be
             if self.failure_forward < 10:
                 self.drive_cmd.drive.steering_angle = 0
@@ -67,15 +67,18 @@ class ParkingController():
             # using proportional (potentially PD or PID) controller to control velocity
             kp = 2
             vel = kp*dist_to_park
-            print(vel)
+            #print(vel)
             vel = max(min(1.0, vel), -1.0) # caps velocity magnitude at 1
-            print(vel)
+            #print(vel)
 
             drive_cmd.drive.speed = vel
-
+	    rospy.loginfo(dist_to_park)
+	    if abs(vel) > .1:
         #################################
-        self.drive_pub.publish(drive_cmd)
-        self.error_publisher()
+       		self.drive_pub.publish(drive_cmd)
+        	self.error_publisher()
+            else:
+		rospy.loginfo("close enough")
         
     def error_publisher(self):
         """
